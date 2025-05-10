@@ -5,6 +5,7 @@
 # Executables
 *.bin
 *.elf
+*.zip
 
 # PROS
 bin/

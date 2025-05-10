@@ -80,14 +80,14 @@ template <isQuantity T> class Vector3D {
         }
 
         /**
-         * @brief * operator overload. Multiplies a vector by a double
+         * @brief * operator overload. Multiplies a vector by a float
          *
          * {a, b} * c = {a * c, b * c}
          *
-         * @param factor the double to multiple the vector by
+         * @param factor the float to multiple the vector by
          * @return Vector2D<T>
          */
-        constexpr Vector3D<T> operator*(double factor) const {
+        constexpr Vector3D<T> operator*(float factor) const {
             return Vector3D<T>(this->x * factor, this->y * factor, this->z * factor);
         }
 
@@ -107,14 +107,14 @@ template <isQuantity T> class Vector3D {
         }
 
         /**
-         * @brief / operator overload. Multiplies a vector by a double
+         * @brief / operator overload. Multiplies a vector by a float
          *
          * {a, b, c} / d = {a / d, b / d, c / d}
          *
-         * @param factor the double to multiple the vector by
+         * @param factor the float to multiple the vector by
          * @return Vector3D<T>
          */
-        constexpr Vector3D<T> operator/(double factor) const {
+        constexpr Vector3D<T> operator/(float factor) const {
             return Vector3D<T>(this->x / factor, this->y / factor, this->z / factor);
         }
 
@@ -171,7 +171,7 @@ template <isQuantity T> class Vector3D {
          * @param factor scalar to multiply by
          * @return Vector3D<T>&
          */
-        constexpr Vector3D<T>& operator*=(double factor) {
+        constexpr Vector3D<T>& operator*=(float factor) {
             this->x *= factor;
             this->y *= factor;
             this->z *= factor;
@@ -186,7 +186,7 @@ template <isQuantity T> class Vector3D {
          * @param factor scalar to divide by
          * @return Vector3D<T>&
          */
-        constexpr Vector3D<T>& operator/=(double factor) {
+        constexpr Vector3D<T>& operator/=(float factor) {
             this->x /= factor;
             this->y /= factor;
             this->z /= factor;
@@ -334,7 +334,7 @@ constexpr Vector3D<Q3> operator*(Q1 lhs, const Vector3D<Q2>& rhs) {
 }
 
 /**
- * @brief * operator overload. Multiplies a double and a vector
+ * @brief * operator overload. Multiplies a float and a vector
  *
  * a * {b, c, d} = {a * b, a * c, a * d}
  *
@@ -344,7 +344,7 @@ constexpr Vector3D<Q3> operator*(Q1 lhs, const Vector3D<Q2>& rhs) {
  * @param rhs the vector on the right hand side
  * @return Vector3D<Q> the product
  */
-template <isQuantity Q> constexpr Vector3D<Q> operator*(double lhs, const Vector3D<Q>& rhs) { return rhs * lhs; }
+template <isQuantity Q> constexpr Vector3D<Q> operator*(float lhs, const Vector3D<Q>& rhs) { return rhs * lhs; }
 
 // define some common vector types
 typedef Vector3D<Length> V3Position;

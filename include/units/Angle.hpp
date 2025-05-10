@@ -5,7 +5,7 @@
 class Angle : public Quantity<std::ratio<0>, std::ratio<0>, std::ratio<0>, std::ratio<0>, std::ratio<1>, std::ratio<0>,
                               std::ratio<0>, std::ratio<0>> {
     public:
-        explicit constexpr Angle(double value)
+        explicit constexpr Angle(float value)
             : Quantity<std::ratio<0>, std::ratio<0>, std::ratio<0>, std::ratio<0>, std::ratio<1>, std::ratio<0>,
                        std::ratio<0>, std::ratio<0>>(value) {}
 
@@ -21,10 +21,10 @@ template <> struct LookupName<Quantity<std::ratio<0>, std::ratio<0>, std::ratio<
         using Named = Angle;
 };
 
-template <> struct std::formatter<Angle> : std::formatter<double> {
+template <> struct std::formatter<Angle> : std::formatter<float> {
         auto format(const Angle& number, std::format_context& ctx) const {
-            auto formatted_double = std::formatter<double>::format(number.internal(), ctx);
-            return std::format_to(formatted_double, "_stRad");
+            auto formatted_float = std::formatter<float>::format(number.internal(), ctx);
+            return std::format_to(formatted_float, "_stRad");
         }
 };
 
@@ -70,9 +70,9 @@ class CAngle {
 
         constexpr CAngle operator+() const { return CAngle(this->value); }
     private:
-        const double value;
+        const float value;
 
-        constexpr CAngle(double value) : value(value) {}
+        constexpr CAngle(float value) : value(value) {}
 };
 
 /**
@@ -91,7 +91,7 @@ class CAngle {
  */
 class AngleRange : public Angle {
     public:
-        explicit constexpr AngleRange(double value) : Angle(fabs(value)) {}
+        explicit constexpr AngleRange(float value) : Angle(fabs(value)) {}
 
         constexpr AngleRange(Angle value) : Angle(units::abs(value)) {}
 
@@ -120,33 +120,33 @@ NEW_UNIT_LITERAL(AngularJerk, rpm3, rot / min / min / min)
 
 // Angle declaration operators
 // Standard orientation
-constexpr Angle operator""_stRad(long double value) { return Angle(static_cast<double>(value)); }
+constexpr Angle operator""_stRad(long double value) { return Angle(static_cast<float>(value)); }
 
-constexpr Angle operator""_stRad(unsigned long long value) { return Angle(static_cast<double>(value)); }
+constexpr Angle operator""_stRad(unsigned long long value) { return Angle(static_cast<float>(value)); }
 
-constexpr Angle operator""_stDeg(long double value) { return static_cast<double>(value) * deg; }
+constexpr Angle operator""_stDeg(long double value) { return static_cast<float>(value) * deg; }
 
-constexpr Angle operator""_stDeg(unsigned long long value) { return static_cast<double>(value) * deg; }
+constexpr Angle operator""_stDeg(unsigned long long value) { return static_cast<float>(value) * deg; }
 
-constexpr Angle operator""_stRot(long double value) { return static_cast<double>(value) * rot; }
+constexpr Angle operator""_stRot(long double value) { return static_cast<float>(value) * rot; }
 
-constexpr Angle operator""_stRot(unsigned long long value) { return static_cast<double>(value) * rot; }
+constexpr Angle operator""_stRot(unsigned long long value) { return static_cast<float>(value) * rot; }
 
 // Compass orientation
-constexpr CAngle operator""_cRad(long double value) { return CAngle(static_cast<double>(value)); }
+constexpr CAngle operator""_cRad(long double value) { return CAngle(static_cast<float>(value)); }
 
-constexpr CAngle operator""_cRad(unsigned long long value) { return CAngle(static_cast<double>(value)); }
+constexpr CAngle operator""_cRad(unsigned long long value) { return CAngle(static_cast<float>(value)); }
 
-constexpr CAngle operator""_cDeg(long double value) { return CAngle(static_cast<double>(value) * deg.internal()); }
+constexpr CAngle operator""_cDeg(long double value) { return CAngle(static_cast<float>(value) * deg.internal()); }
 
 constexpr CAngle operator""_cDeg(unsigned long long value) {
-    return CAngle(static_cast<double>(value) * deg.internal());
+    return CAngle(static_cast<float>(value) * deg.internal());
 }
 
-constexpr CAngle operator""_cRot(long double value) { return CAngle(static_cast<double>(value) * rot.internal()); }
+constexpr CAngle operator""_cRot(long double value) { return CAngle(static_cast<float>(value) * rot.internal()); }
 
 constexpr CAngle operator""_cRot(unsigned long long value) {
-    return CAngle(static_cast<double>(value) * rot.internal());
+    return CAngle(static_cast<float>(value) * rot.internal());
 }
 
 // Angle functions
@@ -168,6 +168,10 @@ template <isQuantity Q> constexpr Angle atan2(const Q& lhs, const Q& rhs) {
 }
 
 static inline Angle constrainAngle360(Angle in) { return mod(in, rot); }
+static inline Angle constrainAngle360_2(Angle in) {
+    in = mod(in, rot);
+    return in < Angle(0) ? in + rot : in;
+}
 
 static inline Angle constrainAngle180(Angle in) {
     in = mod(in + 180 * deg, rot);
@@ -177,27 +181,39 @@ static inline Angle constrainAngle180(Angle in) {
 
 // Angle to/from operators
 // Standard orientation
+constexpr inline Angle from_stRad(float value) { return Angle(value); }
+
 constexpr inline Angle from_stRad(Number value) { return Angle(value.internal()); }
 
-constexpr inline double to_stRad(Angle quantity) { return quantity.internal(); }
+constexpr inline float to_stRad(Angle quantity) { return quantity.internal(); }
+
+constexpr inline Angle from_stDeg(float value) { return value * deg; }
 
 constexpr inline Angle from_stDeg(Number value) { return value * deg; }
 
-constexpr inline double to_stDeg(Angle quantity) { return quantity.convert(deg); }
+constexpr inline float to_stDeg(Angle quantity) { return quantity.convert(deg); }
+
+constexpr inline Angle from_stRot(float value) { return value * rot; }
 
 constexpr inline Angle from_stRot(Number value) { return value * rot; }
 
-constexpr inline double to_stRot(Angle quantity) { return quantity.convert(rot); }
+constexpr inline float to_stRot(Angle quantity) { return quantity.convert(rot); }
 
 // Compass orientation
+constexpr inline Angle from_cRad(float value) { return 90 * deg - Angle(value); }
+
 constexpr inline Angle from_cRad(Number value) { return 90 * deg - Angle(value.internal()); }
 
-constexpr inline double to_cRad(Angle quantity) { return quantity.internal(); }
+constexpr inline float to_cRad(Angle quantity) { return quantity.internal(); }
+
+constexpr inline Angle from_cDeg(float value) { return (90 - value) * deg; }
 
 constexpr inline Angle from_cDeg(Number value) { return (90 - value.internal()) * deg; }
 
-constexpr inline double to_cDeg(Angle quantity) { return (90 * deg - quantity).convert(deg); }
+constexpr inline float to_cDeg(Angle quantity) { return (90 * deg - quantity).convert(deg); }
+
+constexpr inline Angle from_cRot(float value) { return (90 - value) * deg; }
 
 constexpr inline Angle from_cRot(Number value) { return (90 - value.internal()) * deg; }
 
-constexpr inline double to_cRot(Angle quantity) { return (90 * deg - quantity).convert(rot); }
+constexpr inline float to_cRot(Angle quantity) { return (90 * deg - quantity).convert(rot); }

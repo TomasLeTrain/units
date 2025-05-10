@@ -29,7 +29,7 @@ template<typename Mass = std::ratio<0>,
          typename Moles = std::ratio<0>>
 class Quantity {
   protected:
-    double value; /** the value stored in its base unit type */
+    float value; /** the value stored in its base unit type */
 
   public:
     typedef Mass mass; /** mass unit type */
@@ -72,15 +72,15 @@ class Quantity {
      *
      * @param value the value to initialize the quantity with
      */
-    explicit constexpr Quantity(double value)
+    explicit constexpr Quantity(float value)
         requires(!std::is_same_v<Self, Dimensionless>)
         : value(value) {}
 
-    constexpr Quantity(double value)
+    constexpr Quantity(float value)
         requires std::is_same_v<Self, Dimensionless>
         : value(value) {}
 
-    constexpr operator double() const
+    constexpr operator float() const
         requires std::is_same_v<Self, Dimensionless>
     {
         return value;
@@ -97,14 +97,14 @@ class Quantity {
     /**
      * @brief get the value of the quantity in its base unit type
      *
-     * @return constexpr double
+     * @return constexpr float
      */
-    constexpr double internal() const {
+    constexpr float internal() const {
         return value;
     }
 
     // TODO: document this
-    constexpr double convert(Self quantity) const {
+    constexpr float convert(Self quantity) const {
         return value / quantity.value;
     }
 
@@ -118,7 +118,7 @@ class Quantity {
         value += other.value;
     }
 
-    constexpr void operator+=(double other)
+    constexpr void operator+=(float other)
         requires std::is_same_v<Self, Dimensionless>
     {
         value += other;
@@ -134,22 +134,22 @@ class Quantity {
         value -= other.value;
     }
 
-    constexpr void operator-=(double other)
+    constexpr void operator-=(float other)
         requires std::is_same_v<Self, Dimensionless>
     {
         value -= other;
     }
 
     /**
-     * @brief set the value of this quantity to its current value times a double
+     * @brief set the value of this quantity to its current value times a float
      *
      * @param multiple the multiple to multiply by
      */
-    constexpr void operator*=(double multiple) {
+    constexpr void operator*=(float multiple) {
         value *= multiple;
     }
 
-    constexpr void operator*=(double other)
+    constexpr void operator*=(float other)
         requires std::is_same_v<Self, Dimensionless>
     {
         value *= other;
@@ -157,27 +157,27 @@ class Quantity {
 
     /**
      * @brief set the value of this quantity to its current value divided by a
-     * double
+     * float
      *
      * @param dividend the dividend to divide by
      */
-    constexpr void operator/=(double dividend) {
+    constexpr void operator/=(float dividend) {
         value /= dividend;
     }
 
-    constexpr void operator/=(double other)
+    constexpr void operator/=(float other)
         requires std::is_same_v<Self, Dimensionless>
     {
         value /= other;
     }
 
     /**
-     * @brief set the value of this quantity to a double, only if the quantity
+     * @brief set the value of this quantity to a float, only if the quantity
      * is a number
      *
-     * @param rhs the double to assign
+     * @param rhs the float to assign
      */
-    constexpr void operator=(const double& rhs) {
+    constexpr void operator=(const float& rhs) {
         static_assert(
           std::ratio_equal<mass, std::ratio<0>>() &&
             std::ratio_equal<length, std::ratio<0>>() &&
@@ -187,7 +187,7 @@ class Quantity {
             std::ratio_equal<temperature, std::ratio<0>>() &&
             std::ratio_equal<luminosity, std::ratio<0>>() &&
             std::ratio_equal<moles, std::ratio<0>>(),
-          "Cannot assign a double directly to a non-number unit type");
+          "Cannot assign a float directly to a non-number unit type");
         value = rhs;
     }
 };
@@ -203,7 +203,7 @@ class Number : public Quantity<std::ratio<0>,
                                std::ratio<0>,
                                std::ratio<0>> {
   public:
-    constexpr Number(double number)
+    constexpr Number(float number)
         : Quantity<std::ratio<0>,
                    std::ratio<0>,
                    std::ratio<0>,
@@ -301,7 +301,7 @@ using Rooted =
                  std::ratio_divide<typename Q::moles, quotient>>>;
 
 template<isQuantity Q>
-struct std::formatter<Q> : std::formatter<double> {
+struct std::formatter<Q> : std::formatter<float> {
     auto format(const Q& quantity, std::format_context& ctx) const {
         constinit static std::array<std::pair<intmax_t, intmax_t>, 8> dims {
             {
@@ -321,7 +321,7 @@ struct std::formatter<Q> : std::formatter<double> {
         auto out = ctx.out();
 
         // Format the quantity value
-        out = std::formatter<double>::format(quantity.internal(), ctx);
+        out = std::formatter<float>::format(quantity.internal(), ctx);
 
         // Add dimensions and prefixes
         for (size_t i = 0; i != 8; i++) {
@@ -342,7 +342,7 @@ struct std::formatter<Q> : std::formatter<double> {
 
 inline void
 unit_printer_helper(std::ostream& os,
-                    double quantity,
+                    float quantity,
                     const std::array<std::pair<intmax_t, intmax_t>, 8>& dims) {
     static constinit std::array<const char*, 8> prefixes { "_kg", "_m",   "_s",
                                                            "_A",  "_rad", "_K",
@@ -431,22 +431,22 @@ constexpr auto operator/(Number enumerator, Q divisor) {
 
 template<isQuantity Q1, isQuantity Q2>
 constexpr std::conditional_t<std::is_same_v<Number, Multiplied<Q1, Q2>>,
-                             double,
+                             float,
                              Multiplied<Q1, Q2>>
 operator*(Q1 lhs, Q2 rhs) {
     return std::conditional_t<std::is_same_v<Number, Multiplied<Q1, Q2>>,
-                              double,
+                              float,
                               Multiplied<Q1, Q2>>(lhs.internal() *
                                                   rhs.internal());
 }
 
 template<isQuantity Q1, isQuantity Q2>
 constexpr std::conditional_t<std::is_same_v<Number, Multiplied<Q1, Q2>>,
-                             double,
+                             float,
                              Divided<Q1, Q2>>
 operator/(Q1 lhs, Q2 rhs) {
     return std::conditional_t<std::is_same_v<Number, Multiplied<Q1, Q2>>,
-                              double,
+                              float,
                               Divided<Q1, Q2>>(lhs.internal() / rhs.internal());
 }
 
@@ -502,7 +502,7 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                                  std::ratio<j>,                               \
                                  std::ratio<n>> {                             \
       public:                                                                 \
-        explicit constexpr Name(double value)                                 \
+        explicit constexpr Name(float value)                                 \
             : Quantity<std::ratio<m>,                                         \
                        std::ratio<l>,                                         \
                        std::ratio<t>,                                         \
@@ -511,6 +511,15 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                        std::ratio<o>,                                         \
                        std::ratio<j>,                                         \
                        std::ratio<n>>(value) {}                               \
+        explicit constexpr Name()                                 \
+            : Quantity<std::ratio<m>,                                         \
+                       std::ratio<l>,                                         \
+                       std::ratio<t>,                                         \
+                       std::ratio<i>,                                         \
+                       std::ratio<a>,                                         \
+                       std::ratio<o>,                                         \
+                       std::ratio<j>,                                         \
+                       std::ratio<n>>() {}                               \
         constexpr Name(Quantity<std::ratio<m>,                                \
                                 std::ratio<l>,                                \
                                 std::ratio<t>,                                \
@@ -549,7 +558,7 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                              std::ratio<a>,                                   \
                              std::ratio<o>,                                   \
                              std::ratio<j>,                                   \
-                             std::ratio<n>>(static_cast<double>(value)));     \
+                             std::ratio<n>>(static_cast<float>(value)));     \
     }                                                                         \
     constexpr Name operator""_##suffix(unsigned long long value) {            \
         return Name(Quantity<std::ratio<m>,                                   \
@@ -559,27 +568,27 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                              std::ratio<a>,                                   \
                              std::ratio<o>,                                   \
                              std::ratio<j>,                                   \
-                             std::ratio<n>>(static_cast<double>(value)));     \
+                             std::ratio<n>>(static_cast<float>(value)));     \
     }                                                                         \
     template<>                                                                \
-    struct std::formatter<Name> : std::formatter<double> {                    \
+    struct std::formatter<Name> : std::formatter<float> {                    \
         auto format(const Name& number, std::format_context& ctx) const {     \
-            auto formatted_double =                                           \
-              std::formatter<double>::format(number.internal(), ctx);         \
-            return std::format_to(formatted_double, "_" #suffix);             \
+            auto formatted_float =                                           \
+              std::formatter<float>::format(number.internal(), ctx);         \
+            return std::format_to(formatted_float, "_" #suffix);             \
         }                                                                     \
     };                                                                        \
     inline std::ostream& operator<<(std::ostream& os, const Name& quantity) { \
         os << quantity.internal() << " " << #suffix;                          \
         return os;                                                            \
     }                                                                         \
-    constexpr inline Name from_##suffix(double value) {                       \
+    constexpr inline Name from_##suffix(float value) {                       \
         return Name(value);                                                   \
     }                                                                         \
     constexpr inline Name from_##suffix(Number value) {                       \
         return Name(value.internal());                                        \
     }                                                                         \
-    constexpr inline double to_##suffix(Name quantity) {                      \
+    constexpr inline float to_##suffix(Name quantity) {                      \
         return quantity.internal();                                           \
     }
 
@@ -587,15 +596,15 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
     [[maybe_unused]]                                               \
     constexpr Name suffix = multiple;                              \
     constexpr Name operator""_##suffix(long double value) {        \
-        return static_cast<double>(value) * multiple;              \
+        return static_cast<float>(value) * multiple;              \
     }                                                              \
     constexpr Name operator""_##suffix(unsigned long long value) { \
-        return static_cast<double>(value) * multiple;              \
+        return static_cast<float>(value) * multiple;              \
     }                                                              \
     constexpr inline Name from_##suffix(Number value) {            \
         return value.internal() * multiple;                        \
     }                                                              \
-    constexpr inline double to_##suffix(Name quantity) {           \
+    constexpr inline float to_##suffix(Name quantity) {           \
         return quantity.convert(multiple);                         \
     }
 
@@ -630,6 +639,9 @@ NEW_METRIC_PREFIXES(Time, sec)
 NEW_UNIT_LITERAL(Time, min, sec * 60)
 NEW_UNIT_LITERAL(Time, hr, min * 60)
 NEW_UNIT_LITERAL(Time, day, hr * 24)
+
+NEW_UNIT(Frequency, Hz, 0, 0, -1, 0, 0, 0, 0, 0)
+NEW_METRIC_PREFIXES(Frequency, Hz)
 
 NEW_UNIT(Length, m, 0, 1, 0, 0, 0, 0, 0, 0)
 NEW_METRIC_PREFIXES(Length, m)

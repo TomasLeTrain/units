@@ -75,11 +75,11 @@ using AccelerationPose = AbstractPose<std::ratio<2>>;
 
 } // namespace units
 
-template <> struct std::formatter<units::Pose, char> : std::formatter<double, char> {
+template <> struct std::formatter<units::Pose, char> : std::formatter<float, char> {
         // Parse specifiers (using the base class's parse function)
         template <typename ParseContext> constexpr auto parse(ParseContext& ctx) {
             // Call parse on the current object (base class subobject)
-            return std::formatter<double, char>::parse(ctx);
+            return std::formatter<float, char>::parse(ctx);
         }
 
         // Format the units::Pose object
