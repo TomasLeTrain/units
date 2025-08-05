@@ -12,7 +12,7 @@ class Angle : public Quantity<std::ratio<0>,
                               std::ratio<0>,
                               double> {
   public:
-    explicit constexpr Angle(float value)
+    explicit constexpr Angle(double value)
         : Quantity<std::ratio<0>,
                    std::ratio<0>,
                    std::ratio<0>,
