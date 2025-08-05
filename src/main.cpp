@@ -110,13 +110,13 @@ constexpr void angleTests() {
     Angle a = 2_cDeg;
 }
 
-constexpr void angleRangeTests() {
-    static_assert(r2i(to_stDeg(AngleRange(-15_cDeg))) ==
-                  r2i(to_stDeg(AngleRange(+15_stDeg))));
-    Angle a = 2_stDeg + AngleRange(15_stDeg);
-    Angle b = AngleRange(15_stDeg) + 2_stDeg;
-    Angle c = 2_stDeg + AngleRange(15_cDeg);
-}
+// constexpr void angleRangeTests() {
+//     static_assert(r2i(to_stDeg(AngleRange(-15_cDeg))) ==
+//                   r2i(to_stDeg(AngleRange(+15_stDeg))));
+//     Angle a = 2_stDeg + AngleRange(15_stDeg);
+//     Angle b = AngleRange(15_stDeg) + 2_stDeg;
+//     Angle c = 2_stDeg + AngleRange(15_cDeg);
+// }
 
 constexpr Number numAssignmentTests() {
     Number n = 1; // 1

@@ -26,10 +26,11 @@ template<typename Mass = std::ratio<0>,
          typename Angle = std::ratio<0>,
          typename Temperature = std::ratio<0>,
          typename Luminosity = std::ratio<0>,
-         typename Moles = std::ratio<0>>
+         typename Moles = std::ratio<0>,
+         typename FloatType = double>
 class Quantity {
   protected:
-    float value; /** the value stored in its base unit type */
+    FloatType value; /** the value stored in its base unit type */
 
   public:
     typedef Mass mass; /** mass unit type */
@@ -40,6 +41,7 @@ class Quantity {
     typedef Temperature temperature; /** temperature unit type */
     typedef Luminosity luminosity; /** luminosity unit type */
     typedef Moles moles; /** moles unit type */
+    typedef FloatType floatType; /** moles unit type */
 
     using Self = Quantity<Mass,
                           Length,
@@ -48,7 +50,19 @@ class Quantity {
                           Angle,
                           Temperature,
                           Luminosity,
-                          Moles>;
+                          Moles,
+                          FloatType>;
+
+    template<typename OtherFloatType>
+    using Other = Quantity<Mass,
+                           Length,
+                           Time,
+                           Current,
+                           Angle,
+                           Temperature,
+                           Luminosity,
+                           Moles,
+                           OtherFloatType>;
 
     using Dimensionless = Quantity<std::ratio<0>,
                                    std::ratio<0>,
@@ -57,7 +71,8 @@ class Quantity {
                                    std::ratio<0>,
                                    std::ratio<0>,
                                    std::ratio<0>,
-                                   std::ratio<0>>;
+                                   std::ratio<0>,
+                                   FloatType>;
 
     /**
      * @brief construct a new Quantity object
@@ -72,15 +87,15 @@ class Quantity {
      *
      * @param value the value to initialize the quantity with
      */
-    explicit constexpr Quantity(float value)
+    explicit constexpr Quantity(FloatType value)
         requires(!std::is_same_v<Self, Dimensionless>)
         : value(value) {}
 
-    constexpr Quantity(float value)
+    constexpr Quantity(FloatType value)
         requires std::is_same_v<Self, Dimensionless>
         : value(value) {}
 
-    constexpr operator float() const
+    constexpr operator FloatType() const
         requires std::is_same_v<Self, Dimensionless>
     {
         return value;
@@ -91,20 +106,22 @@ class Quantity {
      *
      * @param other the quantity to copy
      */
-    constexpr Quantity(const Self& other)
-        : value(other.value) {}
+
+    template<typename otherFloatType>
+    constexpr Quantity(const Other<otherFloatType>& other)
+        : value(other.internal()) {}
 
     /**
      * @brief get the value of the quantity in its base unit type
      *
      * @return constexpr float
      */
-    constexpr float internal() const {
+    constexpr FloatType internal() const {
         return value;
     }
 
     // TODO: document this
-    constexpr float convert(Self quantity) const {
+    constexpr FloatType convert(Self quantity) const {
         return value / quantity.value;
     }
 
@@ -114,11 +131,12 @@ class Quantity {
      *
      * @param other the quantity to add
      */
-    constexpr void operator+=(Self other) {
-        value += other.value;
+    template<typename otherFloatType>
+    constexpr void operator+=(Other<otherFloatType> other) {
+        value += other.internal();
     }
 
-    constexpr void operator+=(float other)
+    constexpr void operator+=(FloatType other)
         requires std::is_same_v<Self, Dimensionless>
     {
         value += other;
@@ -130,11 +148,12 @@ class Quantity {
      *
      * @param other the quantity to subtract
      */
-    constexpr void operator-=(Self other) {
-        value -= other.value;
+    template<typename otherFloatType>
+    constexpr void operator-=(Other<otherFloatType> other) {
+        value -= other.internal();
     }
 
-    constexpr void operator-=(float other)
+    constexpr void operator-=(FloatType other)
         requires std::is_same_v<Self, Dimensionless>
     {
         value -= other;
@@ -145,39 +164,39 @@ class Quantity {
      *
      * @param multiple the multiple to multiply by
      */
-    constexpr void operator*=(float multiple) {
+    constexpr void operator*=(FloatType multiple) {
         value *= multiple;
     }
 
-    constexpr void operator*=(float other)
+    constexpr void operator*=(FloatType other)
         requires std::is_same_v<Self, Dimensionless>
     {
         value *= other;
     }
 
     /**
-     * @brief set the value of this quantity to its current value divided by a
-     * float
+     * @brief set the value of this quantity to its current value divided by
+     * FloatType
      *
      * @param dividend the dividend to divide by
      */
-    constexpr void operator/=(float dividend) {
+    constexpr void operator/=(FloatType dividend) {
         value /= dividend;
     }
 
-    constexpr void operator/=(float other)
+    constexpr void operator/=(FloatType other)
         requires std::is_same_v<Self, Dimensionless>
     {
         value /= other;
     }
 
     /**
-     * @brief set the value of this quantity to a float, only if the quantity
-     * is a number
+     * @brief set the value of this quantity to another one, only if the
+     * quantity is a number
      *
-     * @param rhs the float to assign
+     * @param rhs the FloatType to assign
      */
-    constexpr void operator=(const float& rhs) {
+    constexpr void operator=(const FloatType& rhs) {
         static_assert(
           std::ratio_equal<mass, std::ratio<0>>() &&
             std::ratio_equal<length, std::ratio<0>>() &&
@@ -190,6 +209,11 @@ class Quantity {
           "Cannot assign a float directly to a non-number unit type");
         value = rhs;
     }
+
+    template<typename otherFloatType>
+    constexpr void operator=(const Other<otherFloatType>& other) {
+        value = other.internal();
+    }
 };
 
 /* Number is a special type, because it can be implicitly converted to and from
@@ -201,9 +225,10 @@ class Number : public Quantity<std::ratio<0>,
                                std::ratio<0>,
                                std::ratio<0>,
                                std::ratio<0>,
-                               std::ratio<0>> {
+                               std::ratio<0>,
+                               double> {
   public:
-    constexpr Number(float number)
+    constexpr Number(double number)
         : Quantity<std::ratio<0>,
                    std::ratio<0>,
                    std::ratio<0>,
@@ -211,7 +236,8 @@ class Number : public Quantity<std::ratio<0>,
                    std::ratio<0>,
                    std::ratio<0>,
                    std::ratio<0>,
-                   std::ratio<0>>(number) {}
+                   std::ratio<0>,
+                   double>(number) {}
 };
 
 template<typename Q>
@@ -230,7 +256,8 @@ template<typename Mass = std::ratio<0>,
          typename Angle = std::ratio<0>,
          typename Temperature = std::ratio<0>,
          typename Luminosity = std::ratio<0>,
-         typename Moles = std::ratio<0>>
+         typename Moles = std::ratio<0>,
+         typename FloatType = double>
 void quantityChecker(Quantity<Mass,
                               Length,
                               Time,
@@ -238,7 +265,8 @@ void quantityChecker(Quantity<Mass,
                               Angle,
                               Temperature,
                               Luminosity,
-                              Moles>) {}
+                              Moles,
+                              FloatType>) {}
 
 // isQuantity concept
 template<typename Q>
@@ -256,6 +284,14 @@ inline constexpr Q1 unit_cast(Q2 quantity) {
     return Q1(quantity.internal());
 }
 
+// returns type with higher precision.
+template<isQuantity Q1, isQuantity Q2>
+using HigherPrecision =
+  std::conditional_t<(std::numeric_limits<typename Q1::floatType>::digits >=
+                      std::numeric_limits<typename Q2::floatType>::digits),
+                     typename Q1::floatType,
+                     typename Q2::floatType>;
+
 template<isQuantity Q1, isQuantity Q2>
 using Multiplied = Named<
   Quantity<std::ratio_add<typename Q1::mass, typename Q2::mass>,
@@ -265,7 +301,8 @@ using Multiplied = Named<
            std::ratio_add<typename Q1::angle, typename Q2::angle>,
            std::ratio_add<typename Q1::temperature, typename Q2::temperature>,
            std::ratio_add<typename Q1::luminosity, typename Q2::luminosity>,
-           std::ratio_add<typename Q1::moles, typename Q2::moles>>>;
+           std::ratio_add<typename Q1::moles, typename Q2::moles>,
+           HigherPrecision<Q1, Q2>>>;
 
 template<isQuantity Q1, isQuantity Q2>
 using Divided = Named<Quantity<
@@ -276,7 +313,8 @@ using Divided = Named<Quantity<
   std::ratio_subtract<typename Q1::angle, typename Q2::angle>,
   std::ratio_subtract<typename Q1::temperature, typename Q2::temperature>,
   std::ratio_subtract<typename Q1::luminosity, typename Q2::luminosity>,
-  std::ratio_subtract<typename Q1::moles, typename Q2::moles>>>;
+  std::ratio_subtract<typename Q1::moles, typename Q2::moles>,
+  HigherPrecision<Q1, Q2>>>;
 
 template<isQuantity Q, typename factor>
 using Exponentiated =
@@ -287,7 +325,8 @@ using Exponentiated =
                  std::ratio_multiply<typename Q::angle, factor>,
                  std::ratio_multiply<typename Q::temperature, factor>,
                  std::ratio_multiply<typename Q::luminosity, factor>,
-                 std::ratio_multiply<typename Q::moles, factor>>>;
+                 std::ratio_multiply<typename Q::moles, factor>,
+                 typename Q::floatType>>;
 
 template<isQuantity Q, typename quotient>
 using Rooted =
@@ -298,7 +337,8 @@ using Rooted =
                  std::ratio_divide<typename Q::angle, quotient>,
                  std::ratio_divide<typename Q::temperature, quotient>,
                  std::ratio_divide<typename Q::luminosity, quotient>,
-                 std::ratio_divide<typename Q::moles, quotient>>>;
+                 std::ratio_divide<typename Q::moles, quotient>,
+                 typename Q::floatType>>;
 
 template<isQuantity Q>
 struct std::formatter<Q> : std::formatter<float> {
@@ -431,22 +471,22 @@ constexpr auto operator/(Number enumerator, Q divisor) {
 
 template<isQuantity Q1, isQuantity Q2>
 constexpr std::conditional_t<std::is_same_v<Number, Multiplied<Q1, Q2>>,
-                             float,
+                             Number,
                              Multiplied<Q1, Q2>>
 operator*(Q1 lhs, Q2 rhs) {
     return std::conditional_t<std::is_same_v<Number, Multiplied<Q1, Q2>>,
-                              float,
+                              Number,
                               Multiplied<Q1, Q2>>(lhs.internal() *
                                                   rhs.internal());
 }
 
 template<isQuantity Q1, isQuantity Q2>
 constexpr std::conditional_t<std::is_same_v<Number, Multiplied<Q1, Q2>>,
-                             float,
+                             Number,
                              Divided<Q1, Q2>>
 operator/(Q1 lhs, Q2 rhs) {
     return std::conditional_t<std::is_same_v<Number, Multiplied<Q1, Q2>>,
-                              float,
+                              Number,
                               Divided<Q1, Q2>>(lhs.internal() / rhs.internal());
 }
 
@@ -492,7 +532,7 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
     return (lhs.internal() > rhs.internal());
 }
 
-#define NEW_UNIT(Name, suffix, m, l, t, i, a, o, j, n)                        \
+#define NEW_UNIT2(Name, suffix, m, l, t, i, a, o, j, n, f)                    \
     class Name : public Quantity<std::ratio<m>,                               \
                                  std::ratio<l>,                               \
                                  std::ratio<t>,                               \
@@ -500,9 +540,10 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                                  std::ratio<a>,                               \
                                  std::ratio<o>,                               \
                                  std::ratio<j>,                               \
-                                 std::ratio<n>> {                             \
+                                 std::ratio<n>,                               \
+                                 f> {                                         \
       public:                                                                 \
-        explicit constexpr Name(float value)                                 \
+        explicit constexpr Name(f value)                                      \
             : Quantity<std::ratio<m>,                                         \
                        std::ratio<l>,                                         \
                        std::ratio<t>,                                         \
@@ -510,8 +551,9 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                        std::ratio<a>,                                         \
                        std::ratio<o>,                                         \
                        std::ratio<j>,                                         \
-                       std::ratio<n>>(value) {}                               \
-        explicit constexpr Name()                                 \
+                       std::ratio<n>,                                         \
+                       f>(value) {}                                           \
+        explicit constexpr Name()                                             \
             : Quantity<std::ratio<m>,                                         \
                        std::ratio<l>,                                         \
                        std::ratio<t>,                                         \
@@ -519,7 +561,9 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                        std::ratio<a>,                                         \
                        std::ratio<o>,                                         \
                        std::ratio<j>,                                         \
-                       std::ratio<n>>() {}                               \
+                       std::ratio<n>,                                         \
+                       f>() {}                                                \
+        template<typename OtherFloatType>                                     \
         constexpr Name(Quantity<std::ratio<m>,                                \
                                 std::ratio<l>,                                \
                                 std::ratio<t>,                                \
@@ -527,7 +571,8 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                                 std::ratio<a>,                                \
                                 std::ratio<o>,                                \
                                 std::ratio<j>,                                \
-                                std::ratio<n>> value)                         \
+                                std::ratio<n>,                                \
+                                OtherFloatType> value)                        \
             : Quantity<std::ratio<m>,                                         \
                        std::ratio<l>,                                         \
                        std::ratio<t>,                                         \
@@ -535,7 +580,8 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                        std::ratio<a>,                                         \
                        std::ratio<o>,                                         \
                        std::ratio<j>,                                         \
-                       std::ratio<n>>(value) {};                              \
+                       std::ratio<n>,                                         \
+                       f>(value) {};                                          \
     };                                                                        \
     template<>                                                                \
     struct LookupName<Quantity<std::ratio<m>,                                 \
@@ -545,7 +591,8 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                                std::ratio<a>,                                 \
                                std::ratio<o>,                                 \
                                std::ratio<j>,                                 \
-                               std::ratio<n>>> {                              \
+                               std::ratio<n>,                                 \
+                               f>> {                                          \
         using Named = Name;                                                   \
     };                                                                        \
     [[maybe_unused]]                                                          \
@@ -558,7 +605,8 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                              std::ratio<a>,                                   \
                              std::ratio<o>,                                   \
                              std::ratio<j>,                                   \
-                             std::ratio<n>>(static_cast<float>(value)));     \
+                             std::ratio<n>,                                   \
+                             f>(static_cast<f>(value)));                      \
     }                                                                         \
     constexpr Name operator""_##suffix(unsigned long long value) {            \
         return Name(Quantity<std::ratio<m>,                                   \
@@ -568,55 +616,56 @@ constexpr bool operator>(const Q& lhs, const R& rhs)
                              std::ratio<a>,                                   \
                              std::ratio<o>,                                   \
                              std::ratio<j>,                                   \
-                             std::ratio<n>>(static_cast<float>(value)));     \
+                             std::ratio<n>,                                   \
+                             f>(static_cast<f>(value)));                      \
     }                                                                         \
     template<>                                                                \
-    struct std::formatter<Name> : std::formatter<float> {                    \
+    struct std::formatter<Name> : std::formatter<f> {                         \
         auto format(const Name& number, std::format_context& ctx) const {     \
-            auto formatted_float =                                           \
-              std::formatter<float>::format(number.internal(), ctx);         \
-            return std::format_to(formatted_float, "_" #suffix);             \
+            auto formatted_float =                                            \
+              std::formatter<f>::format(number.internal(), ctx);              \
+            return std::format_to(formatted_float, "_" #suffix);              \
         }                                                                     \
     };                                                                        \
     inline std::ostream& operator<<(std::ostream& os, const Name& quantity) { \
         os << quantity.internal() << " " << #suffix;                          \
         return os;                                                            \
     }                                                                         \
-    constexpr inline Name from_##suffix(float value) {                       \
+    constexpr inline Name from_##suffix(f value) {                            \
         return Name(value);                                                   \
     }                                                                         \
     constexpr inline Name from_##suffix(Number value) {                       \
         return Name(value.internal());                                        \
     }                                                                         \
-    constexpr inline float to_##suffix(Name quantity) {                      \
+    constexpr inline f to_##suffix(Name quantity) {                           \
         return quantity.internal();                                           \
     }
 
-#define NEW_UNIT_LITERAL(Name, suffix, multiple)                   \
+#define NEW_UNIT_LITERAL2(Name, suffix, multiple, f)               \
     [[maybe_unused]]                                               \
     constexpr Name suffix = multiple;                              \
     constexpr Name operator""_##suffix(long double value) {        \
-        return static_cast<float>(value) * multiple;              \
+        return static_cast<f>(value) * suffix;                     \
     }                                                              \
     constexpr Name operator""_##suffix(unsigned long long value) { \
-        return static_cast<float>(value) * multiple;              \
+        return static_cast<f>(value) * suffix;                     \
     }                                                              \
     constexpr inline Name from_##suffix(Number value) {            \
-        return value.internal() * multiple;                        \
+        return value.internal() * suffix;                          \
     }                                                              \
-    constexpr inline float to_##suffix(Name quantity) {           \
-        return quantity.convert(multiple);                         \
+    constexpr inline f to_##suffix(Name quantity) {                \
+        return quantity.convert(suffix);                           \
     }
 
-#define NEW_METRIC_PREFIXES(Name, base)          \
-    NEW_UNIT_LITERAL(Name, T##base, base * 1E12) \
-    NEW_UNIT_LITERAL(Name, G##base, base * 1E9)  \
-    NEW_UNIT_LITERAL(Name, M##base, base * 1E6)  \
-    NEW_UNIT_LITERAL(Name, k##base, base * 1E3)  \
-    NEW_UNIT_LITERAL(Name, c##base, base / 1E2)  \
-    NEW_UNIT_LITERAL(Name, m##base, base / 1E3)  \
-    NEW_UNIT_LITERAL(Name, u##base, base / 1E6)  \
-    NEW_UNIT_LITERAL(Name, n##base, base / 1E9)
+#define NEW_METRIC_PREFIXES2(Name, base, f)          \
+    NEW_UNIT_LITERAL2(Name, T##base, base * 1E12, f) \
+    NEW_UNIT_LITERAL2(Name, G##base, base * 1E9, f)  \
+    NEW_UNIT_LITERAL2(Name, M##base, base * 1E6, f)  \
+    NEW_UNIT_LITERAL2(Name, k##base, base * 1E3, f)  \
+    NEW_UNIT_LITERAL2(Name, c##base, base / 1E2, f)  \
+    NEW_UNIT_LITERAL2(Name, m##base, base / 1E3, f)  \
+    NEW_UNIT_LITERAL2(Name, u##base, base / 1E6, f)  \
+    NEW_UNIT_LITERAL2(Name, n##base, base / 1E9, f)
 
 template<>
 struct LookupName<Quantity<std::ratio<0>,
@@ -626,9 +675,22 @@ struct LookupName<Quantity<std::ratio<0>,
                            std::ratio<0>,
                            std::ratio<0>,
                            std::ratio<0>,
-                           std::ratio<0>>> {
+                           std::ratio<0>,
+                           double>> {
     using Named = Number;
 };
+
+#define NEW_UNIT(name, suffix, m, l, t, i, a, o, j, n)           \
+    NEW_UNIT2(F##name, F##suffix, m, l, t, i, a, o, j, n, float) \
+    NEW_UNIT2(name, suffix, m, l, t, i, a, o, j, n, double)
+
+#define NEW_UNIT_LITERAL(Name, suffix, multiple)                    \
+    NEW_UNIT_LITERAL2(F##Name, F##suffix, F##Name(multiple), float) \
+    NEW_UNIT_LITERAL2(Name, suffix, multiple, double)
+
+#define NEW_METRIC_PREFIXES(Name, base)           \
+    NEW_METRIC_PREFIXES2(F##Name, F##base, float) \
+    NEW_METRIC_PREFIXES2(Name, base, double)
 
 NEW_UNIT(Mass, kg, 1, 0, 0, 0, 0, 0, 0, 0)
 NEW_UNIT_LITERAL(Mass, g, kg / 1000)
@@ -663,7 +725,7 @@ NEW_UNIT_LITERAL(Area, nm2, nm* nm);
 NEW_UNIT_LITERAL(Area, in2, in* in)
 
 NEW_UNIT(LinearVelocity, mps, 0, 1, -1, 0, 0, 0, 0, 0)
-NEW_METRIC_PREFIXES(LinearVelocity, mps);
+NEW_METRIC_PREFIXES(LinearVelocity, mps)
 NEW_UNIT_LITERAL(LinearVelocity, mph, m / hr)
 NEW_METRIC_PREFIXES(LinearVelocity, mph)
 NEW_UNIT_LITERAL(LinearVelocity, inps, in / sec)
@@ -683,7 +745,7 @@ NEW_METRIC_PREFIXES(LinearJerk, mph3)
 NEW_UNIT_LITERAL(LinearJerk, inps3, in / (sec * sec * sec))
 NEW_UNIT_LITERAL(LinearJerk, miph3, mi / (hr * hr * hr))
 
-NEW_UNIT(Curvature, radpm, 0, -1, 0, 0, 0, 0, 0, 0);
+NEW_UNIT(Curvature, radpm, 0, -1, 0, 0, 0, 0, 0, 0)
 
 NEW_UNIT(Inertia, kgm2, 1, 2, 0, 0, 0, 0, 0, 0)
 
@@ -698,17 +760,17 @@ NEW_UNIT(Current, amp, 0, 0, 0, 1, 0, 0, 0, 0)
 NEW_UNIT(Charge, coulomb, 0, 0, 1, 1, 0, 0, 0, 0)
 
 NEW_UNIT(Voltage, volt, 1, 2, -3, -1, 0, 0, 0, 0)
-NEW_METRIC_PREFIXES(Voltage, volt);
+NEW_METRIC_PREFIXES(Voltage, volt)
 
 NEW_UNIT(Resistance, ohm, 1, 2, -3, -2, 0, 0, 0, 0)
 NEW_METRIC_PREFIXES(Resistance, ohm)
 
 NEW_UNIT(Conductance, siemen, -1, -2, 3, 2, 0, 0, 0, 0)
-NEW_METRIC_PREFIXES(Conductance, siemen);
+NEW_METRIC_PREFIXES(Conductance, siemen)
 
-NEW_UNIT(Luminosity, candela, 0, 0, 0, 0, 0, 0, 1, 0);
+NEW_UNIT(Luminosity, candela, 0, 0, 0, 0, 0, 0, 1, 0)
 
-NEW_UNIT(Moles, mol, 0, 0, 0, 0, 0, 0, 0, 1);
+NEW_UNIT(Moles, mol, 0, 0, 0, 0, 0, 0, 0, 1)
 
 namespace units {
 // Helper: if T is arithmetic, convert it to Number; otherwise leave it
@@ -957,4 +1019,64 @@ toAngular(Quantity<typename Q::mass,
                               typename Q::temperature,
                               typename Q::luminosity,
                               typename Q::moles>>(linear / (diameter / 2.0));
+}
+
+template<isQuantity Q>
+constexpr Quantity<typename Q::mass,
+                   typename Q::angle,
+                   typename Q::time,
+                   typename Q::current,
+                   typename Q::length,
+                   typename Q::temperature,
+                   typename Q::luminosity,
+                   typename Q::moles,
+                   float>
+toFloat(Quantity<typename Q::mass,
+                 typename Q::length,
+                 typename Q::time,
+                 typename Q::current,
+                 typename Q::angle,
+                 typename Q::temperature,
+                 typename Q::luminosity,
+                 typename Q::moles,
+                 double> doubleUnit) {
+    return static_cast<Quantity<typename Q::mass,
+                                typename Q::angle,
+                                typename Q::time,
+                                typename Q::current,
+                                typename Q::length,
+                                typename Q::temperature,
+                                typename Q::luminosity,
+                                typename Q::moles,
+                                float>>(doubleUnit);
+}
+
+template<isQuantity Q>
+constexpr Quantity<typename Q::mass,
+                   typename Q::angle,
+                   typename Q::time,
+                   typename Q::current,
+                   typename Q::length,
+                   typename Q::temperature,
+                   typename Q::luminosity,
+                   typename Q::moles,
+                   double>
+toDouble(Quantity<typename Q::mass,
+                  typename Q::length,
+                  typename Q::time,
+                  typename Q::current,
+                  typename Q::angle,
+                  typename Q::temperature,
+                  typename Q::luminosity,
+                  typename Q::moles,
+                  float> floatUnit) {
+    return static_cast<Quantity<typename Q::mass,
+                                typename Q::angle,
+                                typename Q::time,
+                                typename Q::current,
+                                typename Q::length,
+                                typename Q::temperature,
+                                typename Q::luminosity,
+                                typename Q::moles,
+                                double>>(floatUnit);
 }
