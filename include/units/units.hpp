@@ -272,6 +272,25 @@ void quantityChecker(Quantity<Mass,
 template<typename Q>
 concept isQuantity = requires(Q q) { quantityChecker(q); };
 
+/**
+ * @brief concept which guarantees Q2 and Q1 are the same quantity and
+ * same/different floatType
+ *
+ * @tparam Q1 quantity 1
+ * @tparam Q2 quantity 2
+ */
+template<typename Q, typename... Quantities>
+concept sameQuantity =
+  ((std::ratio_equal<typename Q::mass, typename Quantities::mass>() &&
+    std::ratio_equal<typename Q::length, typename Quantities::length>() &&
+    std::ratio_equal<typename Q::time, typename Q::time>() &&
+    std::ratio_equal<typename Q::current, typename Quantities::current>() &&
+    std::ratio_equal<typename Q::angle, typename Quantities::angle>() &&
+    std::ratio_equal<typename Q::temperature, typename Quantities::temperature>() &&
+    std::ratio_equal<typename Q::luminosity, typename Quantities::luminosity>() &&
+    std::ratio_equal<typename Q::moles, typename Quantities::moles>()) &&
+   ...);
+
 // Isomorphic concept - used to ensure unit equivalency
 template<typename Q, typename... Quantities>
 concept Isomorphic =
@@ -722,7 +741,7 @@ NEW_UNIT_LITERAL(Area, cm2, cm* cm);
 NEW_UNIT_LITERAL(Area, mm2, mm* mm);
 NEW_UNIT_LITERAL(Area, um2, um* um);
 NEW_UNIT_LITERAL(Area, nm2, nm* nm);
-NEW_UNIT_LITERAL(Area, in2, in* in)
+NEW_UNIT_LITERAL(Area, in2, in* in);
 
 NEW_UNIT(LinearVelocity, mps, 0, 1, -1, 0, 0, 0, 0, 0)
 NEW_METRIC_PREFIXES(LinearVelocity, mps)
@@ -971,7 +990,8 @@ constexpr Quantity<typename Q::mass,
                    typename Q::length,
                    typename Q::temperature,
                    typename Q::luminosity,
-                   typename Q::moles>
+                   typename Q::moles,
+                   typename Q::floatType>
 toLinear(Quantity<typename Q::mass,
                   typename Q::length,
                   typename Q::time,
@@ -979,7 +999,8 @@ toLinear(Quantity<typename Q::mass,
                   typename Q::angle,
                   typename Q::temperature,
                   typename Q::luminosity,
-                  typename Q::moles> angular,
+                  typename Q::moles,
+                  typename Q::floatType> angular,
          Length diameter) {
     return unit_cast<Quantity<typename Q::mass,
                               typename Q::angle,
@@ -988,7 +1009,9 @@ toLinear(Quantity<typename Q::mass,
                               typename Q::length,
                               typename Q::temperature,
                               typename Q::luminosity,
-                              typename Q::moles>>(angular * (diameter / 2.0));
+                              typename Q::moles,
+                              typename Q::floatType>>(angular *
+                                                      (diameter / 2.0));
 }
 
 // Convert an linear unit `Q` to a angular unit correctly;
@@ -1001,7 +1024,8 @@ constexpr Quantity<typename Q::mass,
                    typename Q::length,
                    typename Q::temperature,
                    typename Q::luminosity,
-                   typename Q::moles>
+                   typename Q::moles,
+                   typename Q::floatType>
 toAngular(Quantity<typename Q::mass,
                    typename Q::length,
                    typename Q::time,
@@ -1009,7 +1033,8 @@ toAngular(Quantity<typename Q::mass,
                    typename Q::angle,
                    typename Q::temperature,
                    typename Q::luminosity,
-                   typename Q::moles> linear,
+                   typename Q::moles,
+                   typename Q::floatType> linear,
           Length diameter) {
     return unit_cast<Quantity<typename Q::mass,
                               typename Q::angle,
@@ -1018,7 +1043,9 @@ toAngular(Quantity<typename Q::mass,
                               typename Q::length,
                               typename Q::temperature,
                               typename Q::luminosity,
-                              typename Q::moles>>(linear / (diameter / 2.0));
+                              typename Q::moles,
+                              typename Q::floatType>>(linear /
+                                                      (diameter / 2.0));
 }
 
 template<isQuantity Q>

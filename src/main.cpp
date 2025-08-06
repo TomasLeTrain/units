@@ -9,7 +9,7 @@ constexpr int r2i(double value) {
 }
 
 void initialize() {
-    std::cout << std::format("{:.2f}", 15.2_cm)
+    std::cout << std::format("{:.2f}", FLength(15.2_cm))
               << std::endl; // should output 0.15_m
     std::cout << std::format("{:.2f}", 180_stDeg)
               << std::endl; // should output 3.14_stRad
@@ -21,10 +21,13 @@ void initialize() {
               << std::endl;
     Number a(2.123);
     std::cout << std::format("{:.2f}", a) << std::endl;
-    units::Vector2D<Length> v2a = units::V2Position(2_in, 2_in) / 2;
+
+    // constructs V2FPosition from a V2Position vector
+    units::V2FPosition v2a = units::V2Position(2_in, 2_in) / 2;
+
     std::cout << std::format("{}", v2a) << std::endl;
     units::max(2, 2);
-    Length ab = 2_in;
+    FLength ab = 2_in;
     ab *= a;
 }
 
@@ -40,7 +43,7 @@ constexpr void numberOperatorTests() {
 }
 
 constexpr void miscTests() {
-    units::AccelerationPose a(1_mps2, 2_mps2);
+    units::FAccelerationPose a(1_mps2, 2_mps2);
     Number num = Number(1.0);
     num = Number(0.0);
     a.orientation = Quantity<std::ratio<0>,
@@ -64,7 +67,7 @@ constexpr void miscTests() {
       c = Multiplied<Angle, Time>();
     Length x = unit_cast<Length>(num);
     Angle y = toAngular<Length>(x, 2_cm);
-    Length z = toLinear<Angle>(y, 2_cm);
+    FLength z = toLinear<Angle>(y, 2_cm);
     static_assert(Angle(5.1) >= Quantity<std::ratio<0>,
                                          std::ratio<0>,
                                          std::ratio<0>,
