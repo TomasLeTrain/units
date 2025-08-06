@@ -23,6 +23,7 @@ class Temperature : public Quantity<std::ratio<0>,
                    std::ratio<0>,
                    double>(value) {}
 
+    template<typename OtherFloatType>
     constexpr Temperature(Quantity<std::ratio<0>,
                                    std::ratio<0>,
                                    std::ratio<0>,
@@ -31,7 +32,7 @@ class Temperature : public Quantity<std::ratio<0>,
                                    std::ratio<1>,
                                    std::ratio<0>,
                                    std::ratio<0>,
-                                   double> value)
+                                   OtherFloatType> value)
         : Quantity<std::ratio<0>,
                    std::ratio<0>,
                    std::ratio<0>,
@@ -77,6 +78,7 @@ class FTemperature : public Quantity<std::ratio<0>,
                    std::ratio<0>,
                    float>(value) {}
 
+    template<typename OtherFloatType>
     constexpr FTemperature(Quantity<std::ratio<0>,
                                     std::ratio<0>,
                                     std::ratio<0>,
@@ -85,7 +87,7 @@ class FTemperature : public Quantity<std::ratio<0>,
                                     std::ratio<1>,
                                     std::ratio<0>,
                                     std::ratio<0>,
-                                    float> value)
+                                    OtherFloatType> value)
         : Quantity<std::ratio<0>,
                    std::ratio<0>,
                    std::ratio<0>,
