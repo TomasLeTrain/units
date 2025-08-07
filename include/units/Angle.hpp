@@ -12,6 +12,7 @@ class Angle : public Quantity<std::ratio<0>,
                               std::ratio<0>,
                               double> {
   public:
+
     explicit constexpr Angle(double value)
         : Quantity<std::ratio<0>,
                    std::ratio<0>,
@@ -22,6 +23,17 @@ class Angle : public Quantity<std::ratio<0>,
                    std::ratio<0>,
                    std::ratio<0>,
                    double>(value) {}
+
+    constexpr Angle()
+        : Quantity<std::ratio<0>,
+                   std::ratio<0>,
+                   std::ratio<0>,
+                   std::ratio<0>,
+                   std::ratio<1>,
+                   std::ratio<0>,
+                   std::ratio<0>,
+                   std::ratio<0>,
+                   double>() {}
 
     template<typename OtherFloatType>
     constexpr Angle(Quantity<std::ratio<0>,
@@ -91,6 +103,17 @@ class FAngle : public Quantity<std::ratio<0>,
                    std::ratio<0>,
                    std::ratio<0>,
                    float>(value) {}
+
+    constexpr FAngle()
+        : Quantity<std::ratio<0>,
+                   std::ratio<0>,
+                   std::ratio<0>,
+                   std::ratio<0>,
+                   std::ratio<1>,
+                   std::ratio<0>,
+                   std::ratio<0>,
+                   std::ratio<0>,
+                   float>() {}
 
     template<typename OtherFloatType>
     constexpr FAngle(Quantity<std::ratio<0>,
