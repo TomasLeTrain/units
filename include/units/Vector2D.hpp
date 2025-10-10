@@ -247,7 +247,7 @@ class Vector2D {
      * @return Angle
      */
     constexpr Angle angleTo(const Vector2D<T>& other) const {
-        return atan2(other.y - this->y, other.x - this->x);
+        return units::atan2(other.y - this->y, other.x - this->x);
     }
 
     /**
@@ -272,14 +272,22 @@ class Vector2D {
     }
 
     /**
+     * @brief get Angle of vector with respect to the origin.
+     *
+     * @return Angle
+     */
+    constexpr Angle getAngle() const {
+        return Vector2D<T>({ T(0.0), T(0.0) }).angleTo(*this);
+    }
+
+    /**
      * @brief get a copy of this vector rotated by an angle
      *
      * @param angle
      * @return Vector2D<T>
      */
     constexpr Vector2D<T> rotatedBy(Angle angle) const {
-        return fromPolar(Vector2D<T>({ T(0.0), T(0.0) }).angleTo(*this) + angle,
-                         magnitude());
+        return fromPolar(getAngle() + angle, magnitude());
     }
 };
 
