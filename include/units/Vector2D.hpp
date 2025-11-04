@@ -232,6 +232,18 @@ class Vector2D {
     }
 
     /**
+     * @brief the cross product between two vectors
+     *
+     * @param other the other vector
+     * @return Cross product
+     */
+    template<isQuantity Q>
+    constexpr Multiplied<Q, T> cross(const Vector2D<Q>& other) const {
+        return this->x * other.y - this->y * other.x;
+    }
+
+
+    /**
      * @brief magnitude of the vector
      *
      * @return T
